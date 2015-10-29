@@ -5,7 +5,7 @@ include_once ABSPATH . 'wp-admin/includes/file.php';
 
 class Jetpack_JSON_API_Plugins_Install_Endpoint extends Jetpack_JSON_API_Plugins_Endpoint {
 
-	// POST  /sites/%s/plugins/%s/new
+	// POST /sites/%s/plugins/%s/install
 	protected $needed_capabilities = 'install_plugins';
 	protected $action              = 'install';
 	protected $download_links      = array();
@@ -13,7 +13,7 @@ class Jetpack_JSON_API_Plugins_Install_Endpoint extends Jetpack_JSON_API_Plugins
 	protected function install() {
 		foreach ( $this->plugins as $index => $slug ) {
 
-			$skin      = new Automatic_Upgrader_Skin();
+			$skin      = new Jetpack_Automatic_Plugin_Install_Skin();
 			$upgrader  = new Plugin_Upgrader( $skin );
 
 			$result = $upgrader->install( $this->download_links[ $slug ] );
@@ -29,14 +29,14 @@ class Jetpack_JSON_API_Plugins_Install_Endpoint extends Jetpack_JSON_API_Plugins
 			}
 
 			if ( ! $this->bulk && ! $result ) {
-				$error = $this->log[ $slug ]['error'] = __( 'An unknown error occurred during installation', 'jetpack' );
+				$error = $this->log[ $slug ]['error'] = __( 'An unknown error occurred during installation' , 'jetpack' );
 			}
 
 			$this->log[ $plugin ][] = $upgrader->skin->get_upgrade_messages();
 		}
 
 		if ( ! $this->bulk && isset( $error ) ) {
-			return  new WP_Error( 'install_error', $this->log[ $slug ]['error'], 400 );
+			return new WP_Error( 'install_error', $this->log[ $slug ]['error'], 400 );
 		}
 
 		// replace the slug with the actual plugin id
@@ -79,5 +79,23 @@ class Jetpack_JSON_API_Plugins_Install_Endpoint extends Jetpack_JSON_API_Plugins
 			}
 		}
 		return false;
+	}
+}
+/**
+ * Allows us to capture that the site doesn't have proper file system access.
+ * In order to update the plugin.
+ */
+class Jetpack_Automatic_Plugin_Install_Skin extends Automatic_Upgrader_Skin {
+	/**
+	 * @param WP_Upgrader $upgrader
+	 */
+	public function set_upgrader( &$upgrader ) {
+		parent::set_upgrader( $upgrader );
+		// check if we even have permission to
+		$res = $upgrader->fs_connect( array( WP_CONTENT_DIR, WP_PLUGIN_DIR ) );
+		if( !$res ) {
+			$this->messages[] = 'No file system access';
+		}
+
 	}
 }
