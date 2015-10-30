@@ -13,36 +13,87 @@ class Jetpack_JSON_API_Plugins_Install_Endpoint extends Jetpack_JSON_API_Plugins
 	protected function install() {
 		foreach ( $this->plugins as $index => $slug ) {
 
+			// lets not translate the error messages
+			add_filter( 'gettext', array( $this, 'keep_original_text' ), 100, 2 );
+
 			$skin      = new Jetpack_Automatic_Plugin_Install_Skin();
 			$upgrader  = new Plugin_Upgrader( $skin );
 
 			$result = $upgrader->install( $this->download_links[ $slug ] );
+			remove_filter( 'gettext', array( $this, 'keep_original_text' ), 100 );
 
 			if ( ! $this->bulk && is_wp_error( $result ) ) {
 				return $result;
 			}
 
 			$plugin = self::get_plugin_id_by_slug( $slug );
-
+			$error_reason = 'install_error';
 			if ( ! $plugin ) {
 				$error = $this->log[ $slug ]['error'] = __( 'There was an error installing your plugin', 'jetpack' );
 			}
 
 			if ( ! $this->bulk && ! $result ) {
-				$error = $this->log[ $slug ]['error'] = __( 'An unknown error occurred during installation' , 'jetpack' );
+				$list_messages = $upgrader->skin->get_upgrade_messages();
+				$message = ( ! empty( $list_messages ) && is_array( $list_messages ) ) ?
+					$list_messages[ count( $list_messages ) - 1 ] : null;
+				$error_reason = $this->get_error_reason( $message, $upgrader->skin->get_upgrade_messages() );
+
+				$error = $this->log[ $slug ]['error'] = $message ? $message : __( 'An unknown error occurred during installation123' , 'jetpack' );
 			}
 
 			$this->log[ $plugin ][] = $upgrader->skin->get_upgrade_messages();
 		}
 
 		if ( ! $this->bulk && isset( $error ) ) {
-			return new WP_Error( 'install_error', $this->log[ $slug ]['error'], 400 );
+			return new WP_Error( $error_reason, $this->log[ $slug ]['error'], 400 );
 		}
 
 		// replace the slug with the actual plugin id
 		$this->plugins[ $index ] = $plugin;
 
 		return true;
+	}
+
+	protected function get_error_reason( $message, $messages ) {
+		$message = substr( $message,0, 16 )  == 'Could not create' ? 'Could not create' : $message;
+		switch( $message ) {
+			case 'Could not access filesystem.':
+				return 'install_error_fs_unavailable';
+				break;
+
+			case 'Could not create':
+				return 'install_error_filesystem_full';
+
+			case 'Plugin install failed.':
+				end($messages);
+				$previous_message = prev( $messages );
+				$previous_message = substr( $previous_message, 0, 33 )  == 'Destination folder already exists' ? 'Destination folder already exists' : $previous_message ;
+				switch( $previous_message ) {
+					case 'Destination folder already exists':
+						return 'install_error_folder_exists';
+						break;
+
+					default:
+						return 'install_error';
+						break;
+				}
+				break;
+
+			case 'Install package not available.':
+				return 'install_error_package_not_available';
+				break;
+
+			default:
+				return 'install_error';
+				break;
+
+		}
+	}
+	/**
+	 * Keep the original text this will help the error messages return the right error_reason.
+	 */
+	function keep_original_text( $translations, $text ) {
+		return $text;
 	}
 
 	protected function validate_plugins() {
@@ -94,7 +145,7 @@ class Jetpack_Automatic_Plugin_Install_Skin extends Automatic_Upgrader_Skin {
 		// check if we even have permission to
 		$res = $upgrader->fs_connect( array( WP_CONTENT_DIR, WP_PLUGIN_DIR ) );
 		if( !$res ) {
-			$this->messages[] = 'No file system access';
+			$this->messages[] = 'Could not access filesystem.';
 		}
 
 	}
