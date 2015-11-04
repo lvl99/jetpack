@@ -27,25 +27,22 @@ class Jetpack_JSON_API_Plugins_Install_Endpoint extends Jetpack_JSON_API_Plugins
 			}
 
 			$plugin = self::get_plugin_id_by_slug( $slug );
-			$error_reason = 'install_error';
+			$error_code = 'install_error';
 			if ( ! $plugin ) {
 				$error = $this->log[ $slug ]['error'] = __( 'There was an error installing your plugin', 'jetpack' );
 			}
 
 			if ( ! $this->bulk && ! $result ) {
-				$list_messages = $upgrader->skin->get_upgrade_messages();
-				$message = ( ! empty( $list_messages ) && is_array( $list_messages ) ) ?
-					$list_messages[ count( $list_messages ) - 1 ] : null;
-				$error_reason = $this->get_error_reason( $message, $upgrader->skin->get_upgrade_messages() );
-
-				$error = $this->log[ $slug ]['error'] = $message ? $message : __( 'An unknown error occurred during installation123' , 'jetpack' );
+				$error_code = $upgrader->skin->get_main_error_code();
+				$message = $upgrader->skin->get_main_error_message();
+				$error = $this->log[ $slug ]['error'] = $message ? $message : __( 'An unknown error occurred during installation' , 'jetpack' );
 			}
 
 			$this->log[ $plugin ][] = $upgrader->skin->get_upgrade_messages();
 		}
 
 		if ( ! $this->bulk && isset( $error ) ) {
-			return new WP_Error( $error_reason, $this->log[ $slug ]['error'], 400 );
+			return new WP_Error( $error_code, $this->log[ $slug ]['error'], 400 );
 		}
 
 		// replace the slug with the actual plugin id
@@ -138,15 +135,105 @@ class Jetpack_JSON_API_Plugins_Install_Endpoint extends Jetpack_JSON_API_Plugins
  */
 class Jetpack_Automatic_Plugin_Install_Skin extends Automatic_Upgrader_Skin {
 	/**
+	 * Stores the last error key;
+	 **/
+	protected $main_error_code = null;
+
+	/**
+	 * Stores the last error message.
+	 **/
+	protected $main_error_message = null;
+
+	/**
+	 * Overwrites the set_upgrader to be able to tell if we e ven have the ability to write to the files.
+	 *
 	 * @param WP_Upgrader $upgrader
+	 *
 	 */
 	public function set_upgrader( &$upgrader ) {
 		parent::set_upgrader( $upgrader );
-		// check if we even have permission to
-		$res = $upgrader->fs_connect( array( WP_CONTENT_DIR, WP_PLUGIN_DIR ) );
-		if( !$res ) {
-			$this->messages[] = 'Could not access filesystem.';
+
+		// Check if we even have permission to.
+		$result = $upgrader->fs_connect( array( WP_CONTENT_DIR, WP_PLUGIN_DIR ) );
+		if( !$result ) {
+			// set the string here since they are not available just yet
+			$upgrader->generic_strings();
+			$this->feedback( 'fs_unavailable' );
+		}
+	}
+
+	/**
+	 * Overwrites the error function
+	 */
+	public function error( $error ) {
+		if(	is_wp_error( $error ) ) {
+			$this->feedback( $error );
+		}
+	}
+
+	private function set_main_error_code( $code ) {
+		// Don't set the process_failed as code since it is not that helpful unless we don't have one already set.
+		$this->main_error_code = ( $code == 'process_failed' && $this->main_error_code  ? $this->main_error_code : $code );
+	}
+
+	private function set_main_error_message( $message, $code ) {
+		// Don't set the process_failed as message since it is not that helpful unless we don't have one already set.
+		$this->main_error_message = ( $code == 'process_failed' && $this->main_error_code ? $this->main_error_code : $message );
+	}
+
+	public function get_main_error_code() {
+		return $this->main_error_code ? $this->main_error_code : 'install_error';
+	}
+
+	public function get_main_error_message() {
+		return $this->main_error_message ? $this->main_error_message : 'install_error';
+	}
+
+	/**
+	 * Overwrites the feedback function
+	 */
+	public function feedback( $data ) {
+
+		$current_error = null;
+		if ( is_wp_error( $data ) ) {
+			$this->set_main_error_code( $data->get_error_code() );
+			$string = $data->get_error_message();
+		} elseif ( is_array( $data ) ) {
+			return;
+		} else {
+			$string = $data;
 		}
 
+		if ( ! empty( $this->upgrader->strings[ $string ] ) ) {
+			$this->set_main_error_code( $string );
+
+			$current_error = $string;
+			$string = $this->upgrader->strings[ $string ];
+		}
+
+		if ( strpos( $string, '%' ) !== false ) {
+			$args = func_get_args();
+			$args = array_splice( $args, 1 );
+			if ( ! empty( $args ) )
+				$string = vsprintf( $string, $args );
+		}
+
+		$string = trim( $string );
+
+		// Only allow basic HTML in the messages, as it'll be used in emails/logs rather than direct browser output.
+		$string = wp_kses( $string, array(
+			'a' => array(
+				'href' => true
+			),
+			'br' => true,
+			'em' => true,
+			'strong' => true,
+		) );
+
+		if ( empty( $string ) )
+			return;
+
+		$this->set_main_error_message( $string, $current_error );
+		$this->messages[] = $string;
 	}
 }
