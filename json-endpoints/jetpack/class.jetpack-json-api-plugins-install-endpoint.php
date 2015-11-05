@@ -13,14 +13,10 @@ class Jetpack_JSON_API_Plugins_Install_Endpoint extends Jetpack_JSON_API_Plugins
 	protected function install() {
 		foreach ( $this->plugins as $index => $slug ) {
 
-			// lets not translate the error messages
-			add_filter( 'gettext', array( $this, 'keep_original_text' ), 100, 2 );
-
 			$skin      = new Jetpack_Automatic_Plugin_Install_Skin();
 			$upgrader  = new Plugin_Upgrader( $skin );
 
 			$result = $upgrader->install( $this->download_links[ $slug ] );
-			remove_filter( 'gettext', array( $this, 'keep_original_text' ), 100 );
 
 			if ( ! $this->bulk && is_wp_error( $result ) ) {
 				return $result;
@@ -51,41 +47,6 @@ class Jetpack_JSON_API_Plugins_Install_Endpoint extends Jetpack_JSON_API_Plugins
 		return true;
 	}
 
-	protected function get_error_reason( $message, $messages ) {
-		$message = substr( $message,0, 16 )  == 'Could not create' ? 'Could not create' : $message;
-		switch( $message ) {
-			case 'Could not access filesystem.':
-				return 'install_error_fs_unavailable';
-				break;
-
-			case 'Could not create':
-				return 'install_error_filesystem_full';
-
-			case 'Plugin install failed.':
-				end($messages);
-				$previous_message = prev( $messages );
-				$previous_message = substr( $previous_message, 0, 33 )  == 'Destination folder already exists' ? 'Destination folder already exists' : $previous_message ;
-				switch( $previous_message ) {
-					case 'Destination folder already exists':
-						return 'install_error_folder_exists';
-						break;
-
-					default:
-						return 'install_error';
-						break;
-				}
-				break;
-
-			case 'Install package not available.':
-				return 'install_error_package_not_available';
-				break;
-
-			default:
-				return 'install_error';
-				break;
-
-		}
-	}
 	/**
 	 * Keep the original text this will help the error messages return the right error_reason.
 	 */
