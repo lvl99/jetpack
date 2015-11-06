@@ -47,13 +47,6 @@ class Jetpack_JSON_API_Plugins_Install_Endpoint extends Jetpack_JSON_API_Plugins
 		return true;
 	}
 
-	/**
-	 * Keep the original text this will help the error messages return the right error_reason.
-	 */
-	function keep_original_text( $translations, $text ) {
-		return $text;
-	}
-
 	protected function validate_plugins() {
 		if ( empty( $this->plugins ) || ! is_array( $this->plugins ) ) {
 			return new WP_Error( 'missing_plugins', __( 'No plugins found.', 'jetpack' ) );
@@ -79,11 +72,11 @@ class Jetpack_JSON_API_Plugins_Install_Endpoint extends Jetpack_JSON_API_Plugins
 
 	protected static function get_plugin_id_by_slug( $slug ) {
 		$plugins = get_plugins();
-		if( ! is_array( $plugins ) ) {
+		if ( ! is_array( $plugins ) ) {
 			return false;
 		}
 		foreach( $plugins as $id => $plugin_data ) {
-			if( strpos( $id, $slug ) !== false ) {
+			if ( strpos( $id, $slug ) !== false ) {
 				return $id;
 			}
 		}
@@ -98,12 +91,12 @@ class Jetpack_Automatic_Plugin_Install_Skin extends Automatic_Upgrader_Skin {
 	/**
 	 * Stores the last error key;
 	 **/
-	protected $main_error_code = null;
+	protected $main_error_code = 'install_error';
 
 	/**
 	 * Stores the last error message.
 	 **/
-	protected $main_error_message = null;
+	protected $main_error_message = 'An unknown error occurred during installation';
 
 	/**
 	 * Overwrites the set_upgrader to be able to tell if we e ven have the ability to write to the files.
@@ -116,7 +109,7 @@ class Jetpack_Automatic_Plugin_Install_Skin extends Automatic_Upgrader_Skin {
 
 		// Check if we even have permission to.
 		$result = $upgrader->fs_connect( array( WP_CONTENT_DIR, WP_PLUGIN_DIR ) );
-		if( !$result ) {
+		if ( ! $result ) {
 			// set the string here since they are not available just yet
 			$upgrader->generic_strings();
 			$this->feedback( 'fs_unavailable' );
@@ -127,27 +120,27 @@ class Jetpack_Automatic_Plugin_Install_Skin extends Automatic_Upgrader_Skin {
 	 * Overwrites the error function
 	 */
 	public function error( $error ) {
-		if(	is_wp_error( $error ) ) {
+		if ( is_wp_error( $error ) ) {
 			$this->feedback( $error );
 		}
 	}
 
 	private function set_main_error_code( $code ) {
 		// Don't set the process_failed as code since it is not that helpful unless we don't have one already set.
-		$this->main_error_code = ( $code == 'process_failed' && $this->main_error_code  ? $this->main_error_code : $code );
+		$this->main_error_code = ( $code === 'process_failed' && $this->main_error_code  ? $this->main_error_code : $code );
 	}
 
 	private function set_main_error_message( $message, $code ) {
 		// Don't set the process_failed as message since it is not that helpful unless we don't have one already set.
-		$this->main_error_message = ( $code == 'process_failed' && $this->main_error_code ? $this->main_error_code : $message );
+		$this->main_error_message = ( $code === 'process_failed' && $this->main_error_code ? $this->main_error_code : $message );
 	}
 
 	public function get_main_error_code() {
-		return $this->main_error_code ? $this->main_error_code : 'install_error';
+		return $this->main_error_code;
 	}
 
 	public function get_main_error_message() {
-		return $this->main_error_message ? $this->main_error_message : 'install_error';
+		return $this->main_error_message;
 	}
 
 	/**
@@ -181,7 +174,6 @@ class Jetpack_Automatic_Plugin_Install_Skin extends Automatic_Upgrader_Skin {
 
 		$string = trim( $string );
 
-		// Only allow basic HTML in the messages, as it'll be used in emails/logs rather than direct browser output.
 		$string = wp_kses( $string, array(
 			'a' => array(
 				'href' => true
@@ -191,7 +183,7 @@ class Jetpack_Automatic_Plugin_Install_Skin extends Automatic_Upgrader_Skin {
 			'strong' => true,
 		) );
 
-		if ( empty( $string ) )
+		if ( $string )
 			return;
 
 		$this->set_main_error_message( $string, $current_error );
