@@ -237,7 +237,6 @@ function latex_more_info() { ?>
 }
 add_action( 'jetpack_module_more_info_latex', 'latex_more_info' );
 
-// Sharedaddy
 /**
  * Sharing
  */
