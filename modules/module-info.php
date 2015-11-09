@@ -162,7 +162,10 @@ function stats_more_info() { ?>
 	</div>
 
 	<p><?php esc_html_e( 'There are many plugins and services that provide statistics, but data can be overwhelming. Site Stats makes the most popular metrics easy to understand through a clear and attractive interface.', 'jetpack' ) ?></p>
-	<p><?php printf( __( 'You can <a href="%s">view your stats dashboard here</a>.', 'jetpack' ), admin_url( 'admin.php?page=stats' ) ); ?></p>
+	<?php if ( Jetpack::is_module_active( 'stats' ) ) : ?>
+		<p><?php printf( __( 'You can <a href="%s">view your stats dashboard here</a>.', 'jetpack' ), admin_url( 'admin.php?page=stats' ) ); ?></p>
+	<?php endif; ?>
+
 <?php
 }
 add_action( 'jetpack_module_more_info_stats', 'stats_more_info' );
@@ -185,7 +188,9 @@ function publicize_more_info() { ?>
 	<p><?php esc_html_e( 'Publicize allows you to connect your blog to popular social networking sites and automatically share new posts with your friends.	 You can make a connection for just yourself or for all users on your blog.', 'jetpack' ) ?></p>
 	<p><?php esc_html_e( 'Publicize allows you to share your posts on Facebook, Twitter, Tumblr, Yahoo!, and Linkedin.', 'jetpack' ); ?></p>
 
-	<p><?php printf( __( 'Manage your <a href="%s">Publicize settings</a>.', 'jetpack' ), menu_page_url( 'sharing', false ) ); ?>
+	<?php if ( Jetpack::is_module_active( 'publicize' ) ) : ?>
+		<p><?php printf( __( 'Manage your <a href="%s">Publicize settings</a>.', 'jetpack' ), menu_page_url( 'sharing', false ) ); ?>
+	<?php endif; ?>
 
 	<p>&rarr; <a href="http://jetpack.me/support/publicize/"><?php esc_html_e( 'More information on using Publicize.', 'jetpack' ); ?></a></p>
 <?php
@@ -259,23 +264,17 @@ function sharedaddy_more_info() { ?>
 		}
 	?></p>
 
-	<?php
-	if ( class_exists( 'Sharing_Admin' ) ) {
-		?>
+	<p><?php printf( __( 'Full details can be found on the <a href="%s">Sharing support page</a>. This video also gives a swish run-down of how to use the Sharing feature. Watch it in HD for extra snazz!', 'jetpack' ), 'http://support.wordpress.com/sharing/' ); ?></p>
 
+	<?php if ( Jetpack::is_module_active( 'sharedaddy' ) ) : ?>
 		<p><?php printf( __( 'To configure your sharing settings, go to the Settings &rarr; <a href="%s">Sharing</a> menu.', 'jetpack' ), 'options-general.php?page=sharing' ); ?></p>
 		<p><?php esc_html_e( 'Drag and drop sharing services into the enabled section to have them show up on your site, and drag them into the hidden section to have them hidden behind a button.', 'jetpack' ); ?>
+	<?php endif; ?>
 
-		<?php
-	}
-	?>
-
-	<p><?php printf( __( 'Full details can be found on the <a href="%s">Sharing support page</a>. This video also gives a swish run-down of how to use the Sharing feature. Watch it in HD for extra snazz!', 'jetpack' ), 'http://support.wordpress.com/sharing/' ); ?></p>
 <?php
 }
 add_action( 'jetpack_module_more_info_sharedaddy', 'sharedaddy_more_info' );
 
-// After The Deadline
 /**
  * After The Deadline
  */
@@ -292,7 +291,9 @@ function jpatd_more_info() { ?>
 	</div>
 
 	<p><?php printf( __( "The <a href='%s'>After&nbsp;the&nbsp;Deadline</a> Proofreading service improves your writing by using artificial intelligence to find your errors and offer smart suggestions.", 'jetpack' ), 'http://www.afterthedeadline.com/' ); ?></p>
-	<p><?php printf( __( 'After the Deadline provides a number of <a href="%s">customization options</a>, which you can edit in your profile.', 'jetpack' ), esc_url( get_edit_profile_url( get_current_user_id() ) ) . '#atd' ); ?></p>
+	<?php if ( Jetpack::is_module_active( 'after-the-deadline' ) ) : ?>
+		<p><?php printf( __( 'After the Deadline provides a number of <a href="%s">customization options</a>, which you can edit in your profile.', 'jetpack' ), esc_url( get_edit_profile_url( get_current_user_id() ) ) . '#atd' ); ?></p>
+	<?php endif; ?>
 <?php
 }
 add_action( 'jetpack_module_more_info_after-the-deadline', 'jpatd_more_info' );
@@ -340,18 +341,20 @@ function jetpack_subscriptions_more_info() { ?>
 	<p><?php esc_html_e( 'Easily allow any visitor to subscribe to all of your posts via email through a widget in your blog&#8217;s sidebar.  Every time you publish a post, WordPress.com will send a notification to all your subscribers.', 'jetpack' ); ?></p>
 	<p><?php esc_html_e( 'When leaving comments, your visitors can also subscribe to a post&#8217;s comments to keep up with the conversation.', 'jetpack' ); ?></p>
 
-	<p><?php printf(
-		__( 'To use the Subscriptions widget, go to Appearance &#8594; <a href="%s">Widgets</a>. Drag the widget labeled &#8220;Blog Subscriptions (Jetpack)&#8221; into one of your sidebars and configure away.', 'jetpack' ),
-		admin_url( 'widgets.php' )
-	); ?></p>
-	<p><?php printf(
-		__( 'You can also make changes to your Subscription settings at the bottom of the <a href="%s">Discussion Settings</a> page.', 'jetpack' ),
-		admin_url( 'options-discussion.php#jetpack-subscriptions-settings' )
-	); ?></p>
-	<p><?php printf(
-		__( 'To customize the emails sent from your blog to your followers, check the settings at the bottom of the <a href="%s">Reading Settings</a> page.', 'jetpack' ),
-		admin_url( 'options-reading.php#follower-settings' )
-	); ?></p>
+	<?php if ( Jetpack::is_module_active( 'subscriptions' ) ) : ?>
+		<p><?php printf(
+			__( 'To use the Subscriptions widget, go to Appearance &#8594; <a href="%s">Widgets</a>. Drag the widget labeled &#8220;Blog Subscriptions (Jetpack)&#8221; into one of your sidebars and configure away.', 'jetpack' ),
+			admin_url( 'widgets.php' )
+		); ?></p>
+		<p><?php printf(
+			__( 'You can also make changes to your Subscription settings at the bottom of the <a href="%s">Discussion Settings</a> page.', 'jetpack' ),
+			admin_url( 'options-discussion.php#jetpack-subscriptions-settings' )
+		); ?></p>
+		<p><?php printf(
+			__( 'To customize the emails sent from your blog to your followers, check the settings at the bottom of the <a href="%s">Reading Settings</a> page.', 'jetpack' ),
+			admin_url( 'options-reading.php#follower-settings' )
+		); ?></p>
+	<?php endif; ?>
 <?php
 }
 add_action( 'jetpack_module_more_info_subscriptions', 'jetpack_subscriptions_more_info' );
@@ -449,10 +452,12 @@ function jetpack_comments_more_info() {
 
 	<p><?php esc_html_e( 'Comments enables your visitors to use their WordPress.com, Twitter, or Facebook accounts when commenting on your site.', 'jetpack' ); ?></p>
 
-	<p><?php printf(
-		__( "Jetpack tries to match your site's color scheme automatically, but you can make manual adjustments at the bottom of the <a href='%s'>Discussion Settings</a> page.", 'jetpack' ),
-		admin_url( 'options-discussion.php#jetpack-comments-settings' )
-	); ?></p>
+	<?php if ( Jetpack::is_module_active( 'comments' ) ) : ?>
+		<p><?php printf(
+			__( "Jetpack tries to match your site's color scheme automatically, but you can make manual adjustments at the bottom of the <a href='%s'>Discussion Settings</a> page.", 'jetpack' ),
+			admin_url( 'options-discussion.php#jetpack-comments-settings' )
+		); ?></p>
+	<?php endif; ?>
 <?php
 }
 add_action( 'jetpack_module_more_info_comments', 'jetpack_comments_more_info' );
@@ -490,7 +495,10 @@ function jetpack_custom_css_more_info() { ?>
 	</div>
 
 	<p><?php esc_html_e( "The Custom CSS editor gives you the ability to add to or replace your theme's CSS, all while supplying syntax coloring, auto-indentation, and immediate feedback on the validity of the CSS you're writing.", 'jetpack' ); ?></p>
-	<p><?php printf( __( 'To use the CSS editor, go to Appearance &#8594; <a href="%s">Edit CSS</a>.', 'jetpack' ), admin_url( 'themes.php?page=editcss' ) ); ?></p>
+
+	<?php if ( Jetpack::is_module_active( 'custom_css' ) ) : ?>
+		<p><?php printf( __( 'To use the CSS editor, go to Appearance &#8594; <a href="%s">Edit CSS</a>.', 'jetpack' ), admin_url( 'themes.php?page=editcss' ) ); ?></p>
+	<?php endif; ?>
 <?php
 }
 add_action( 'jetpack_module_more_info_custom-css', 'jetpack_custom_css_more_info' );
@@ -572,7 +580,9 @@ function jetpack_post_by_email_more_info() { ?>
 
 	<p><?php esc_html_e( 'Post by Email is a way of publishing posts on your blog by email. Any email client can be used to send the email, allowing you to publish quickly and easily from devices such as cell phones.', 'jetpack' ); ?></p>
 
-	<p><?php printf( __( 'Manage your Post By Email address from your <a href="%s">profile settings</a>.', 'jetpack' ), esc_url( get_edit_profile_url( get_current_user_id() ) . '#post-by-email' ) ); ?>
+	<?php if ( Jetpack::is_module_active( 'post_by_email' ) ) : ?>
+		<p><?php printf( __( 'Manage your Post By Email address from your <a href="%s">profile settings</a>.', 'jetpack' ), esc_url( get_edit_profile_url( get_current_user_id() ) . '#post-by-email' ) ); ?>
+	<?php endif; ?>
 
 	<p>&rarr; <a href="http://jetpack.me/support/post-by-email/"><?php esc_html_e( 'More information on sending emails, attachments, and customizing your posts.', 'jetpack' ); ?></a></p>
 
@@ -660,7 +670,7 @@ function jetpack_omnisearch_more_info() { ?>
 
 	<p><?php esc_html_e( 'Omnisearch plays nice with other plugins by letting other providers offer results as well.', 'jetpack' ); ?></p>
 
-	<?php if( class_exists( 'Jetpack_Omnisearch' ) && current_user_can( 'edit_posts' ) ): ?>
+	<?php if ( class_exists( 'Jetpack_Omnisearch' ) && current_user_can( 'edit_posts' ) ) : ?>
 		<?php echo Jetpack_Omnisearch::get_omnisearch_form(); ?>
 	<?php endif; ?>
 
@@ -694,11 +704,18 @@ function jetpack_videopress_more_link() {
 add_action( 'jetpack_learn_more_button_videopress', 'jetpack_videopress_more_link' );
 
 function jetpack_videopress_more_info() { ?>
+
 	<p><?php printf(
-		__( 'With the VideoPress module you can easily upload videos to your WordPress site and embed them in your posts and pages. This module requires a WordPress.com account with an active <a href="%1$s" target="_blank">VideoPress subscription</a>. Once you have purchased a VideoPress subscription, <a href="%2$s">click here to configure VideoPress</a>.', 'jetpack' ),
-		'http://store.wordpress.com/premium-upgrades/videopress/',
-		Jetpack::admin_url( 'page=jetpack&configure=videopress' )
+		__( 'With the VideoPress module you can easily upload videos to your WordPress site and embed them in your posts and pages. This module requires a WordPress.com account with an active <a href="%1$s" target="_blank">VideoPress subscription</a>.', 'jetpack' ),
+		'http://store.wordpress.com/premium-upgrades/videopress/'
 	); ?></p>
+
+	<?php if ( Jetpack::is_module_active( 'videopress' ) ) : ?>
+		<p><?php printf(
+			__( 'Once you have purchased a VideoPress subscription, <a href="%1$s">click here to configure VideoPress</a>.', 'jetpack' ),
+			Jetpack::admin_url( 'page=jetpack&configure=videopress' )
+		); ?></p>
+	<?php endif; ?>
 <?php
 }
 add_action( 'jetpack_module_more_info_videopress', 'jetpack_videopress_more_info' );
@@ -848,8 +865,10 @@ function jetpack_custom_site_icon() { ?>
 	</div>
 
 	<p><?php esc_html_e( 'Site Icon lets you create an icon for your site. This icon will be used as favicon, mobile icon, and Tile on Windows 8 computers.', 'jetpack' ); ?></p>
-	<p><?php printf( __( 'To add a new icon to your site, head over to <a href="%s">Settings &rarr; General &rarr; Site Icon</a>, and upload an icon.', 'jetpack' ), admin_url( 'options-general.php#site-icon' ) ); ?></p>
 
+	<?php if ( Jetpack::is_module_active( 'site_icon' ) ) : ?>
+		<p><?php printf( __( 'To add a new icon to your site, head over to <a href="%s">Settings &rarr; General &rarr; Site Icon</a>, and upload an icon.', 'jetpack' ), admin_url( 'options-general.php#site-icon' ) ); ?></p>
+	<?php endif; ?>
 <?php
 }
 add_action( 'jetpack_module_more_info_site-icon', 'jetpack_custom_site_icon' );
