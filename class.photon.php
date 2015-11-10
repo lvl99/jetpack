@@ -627,10 +627,11 @@ class Jetpack_Photon {
 			 * @module photon
 			 *
 			 * @since 2.4.0
+			 * @since 3.8.1 Default to false.
 			 *
-			 * @param bool true Should Photon ignore images using the HTTPS scheme. Default to true.
+			 * @param bool true Should Photon ignore images using the HTTPS scheme. Default to false.
 			 */
-			apply_filters( 'jetpack_photon_reject_https', true )
+			apply_filters( 'jetpack_photon_reject_https', false )
 		) {
 			return false;
 		}
