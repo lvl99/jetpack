@@ -390,6 +390,7 @@ class Jetpack {
 				 */
 				do_action( 'jetpack_sync_all_registered_options' );
 			}
+
 			//if Jetpack is connected check if jetpack_unique_connection exists and if not then set it
 			$jetpack_unique_connection = get_option( 'jetpack_unique_connection' );
 			$is_unique_connection = $jetpack_unique_connection && array_key_exists( 'version', $jetpack_unique_connection );
@@ -447,6 +448,7 @@ class Jetpack {
 		$this->sync->mock_option( 'wp_version', array( 'Jetpack', 'get_wp_version' ) );
 
 		add_action( 'init', array( $this, 'sync_update_data') );
+		add_action( 'init', array( $this, 'sync_theme_data' ) );
 
 		/*
 		 * Load things that should only be in Network Admin.
@@ -492,7 +494,17 @@ class Jetpack {
 			"theme_mods_{$theme_slug}",
 			'jetpack_sync_non_public_post_stati',
 			'jetpack_options',
-			'site_icon' // (int) - ID of core's Site Icon attachment ID
+			'site_icon', // (int) - ID of core's Site Icon attachment ID
+			'default_post_format',
+			'default_category',
+			'large_size_w',
+			'large_size_h',
+			'thumbnail_size_w',
+			'thumbnail_size_h',
+			'medium_size_w',
+			'medium_size_h',
+			'thumbnail_crop',
+			'image_default_link_type'
 		);
 
 		foreach( Jetpack_Options::get_option_names( 'non-compact' ) as $option ) {
@@ -512,6 +524,8 @@ class Jetpack {
 		$this->sync->mock_option( 'is_version_controlled', array( 'Jetpack', 'is_version_controlled' ) );
 		$this->sync->mock_option( 'max_upload_size', 'wp_max_upload_size' );
 		$this->sync->mock_option( 'content_width', array( 'Jetpack', 'get_content_width' ) );
+
+		$this->sync->mock_option( 'allowed_file_types', array( 'Jetpack', 'allowed_file_types' ) );
 
 		/**
 		 * Trigger an update to the main_network_site when we update the blogname of a site.
@@ -1249,6 +1263,31 @@ class Jetpack {
 		}
 		return $is_version_controlled;
 	}
+
+	/**
+	 * Retrieves a list of allowed file types.
+	 * @return array $allowed_file_types
+	 **/
+	public static function allowed_file_types() {
+		$allowed_file_types= array();
+		$mime_types = get_allowed_mime_types();
+		foreach ( $mime_types as $type => $mime_type ) {
+			$extras = explode( '|', $type );
+			foreach ( $extras as $extra ) {
+				$allowed_file_types[] = $extra;
+			}
+		}
+		return $allowed_file_types;
+	}
+
+	/**
+	 * Determines whether the current theme supports featured images or not.
+	 * @return boolean
+	 */
+	public static function featured_images_enabled() {
+		return current_theme_supports( 'post-thumbnails' );
+	}
+
 	/*
 	 * Sync back wp_version
 	 */
@@ -1256,6 +1295,7 @@ class Jetpack {
 		global $wp_version;
 		return $wp_version;
 	}
+
 	/**
 	 * Keeps wp_version in sync with .com when WordPress core updates
 	 **/
@@ -1288,6 +1328,13 @@ class Jetpack {
 		}
 
 		$this->sync->mock_option( 'update_details', array( 'Jetpack', 'get_update_details' ) );
+	}
+
+	/**
+	 * Triggers a sync of information specific to the current theme.
+	 */
+	function sync_theme_data() {
+		$this->sync->mock_option( 'featured_images_enabled', array( 'Jetpack', 'featured_images_enabled' ) );
 	}
 
 	/**
